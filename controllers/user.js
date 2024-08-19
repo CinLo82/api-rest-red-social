@@ -1,4 +1,5 @@
 const  User = require('../models/user')
+const  bcrypt = require('bcrypt')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -10,62 +11,54 @@ const pruebaUser = (req, res) => {
 }
 
 // registro de usuarios
-const register = (req, res) => {
-    //recoger datos de peticion
-    let params = req.body
+const register = async (req, res) => {
+    // recoger datos de peticion
+    let params = req.body;
 
-    //comprobar que me llegan bien los datos(validacion)
+    // comprobar que me llegan bien los datos (validacion)
     if (!params.name || !params.surname || !params.nick || !params.email || !params.password) {
-        return res.status(400).json(
-            {
-                status: 'error',
-                message: 'Faltan datos por enviar'
-            }
-        )
+        return res.status(400).json({
+            status: 'error',
+            message: 'Faltan datos por enviar'
+        });
     }
 
-    //crear objetos de usuario
-    let user_to_save = new User(params)
+    try{ 
+        // control de usuarios duplicados
+        let users = await User.find({
+            $or: [
+                { email: params.email.toLowerCase() },
+                { nick: params.nick.toLowerCase() }
+            ]
+        }).exec();
 
-    //control de usuarios duplicados
-    User.find({
-        $or: [
-            {email: user_to_save.email.toLowerCase()},
-            {nick: user_to_save.nick.toLowerCase()}
-        ]
-    }).exec((error, users) => {
-        if (error) {
-            return res.status(500).json(
-                {
-                    status: 'error',
-                    message: 'Error en la petición de usuarios'
-                }
-            )
-        }
         if (users && users.length >= 1) {
-            return res.status(200).send(
-                {
-                    status: 'success',
-                    message: 'El usuario ya esta registrado'
-                }
-            )
+            return res.status(200).send({
+                status: 'success',
+                message: 'El usuario ya esta registrado'
+            });
         }
-       
-    })
 
-    //cifrar la contraseña
+        // cifrar la contraseña
+        let pwd = await bcrypt.hash(params.password, 10);
+        params.password = pwd;
 
-    //guardar usuario en la base de
+        // crear objetos de usuario
+        let user_to_save = new User(params);
 
-    //devolver el resultado
+        let userStored = await user_to_save.save();
 
-    return res.status(200).json(
-        {
+        return res.status(200).json({
             status: 'success',
-            message:'Acción de registro de usuario',
-            user_to_save
-        }
-    )
+            message: 'Usuario registrado con exito',
+            user: userStored
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        });
+    }
 }
 
 module.exports = {
