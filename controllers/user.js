@@ -1,5 +1,6 @@
 const  User = require('../models/user')
 const  bcrypt = require('bcrypt')
+const jwt = require('../services/jwt')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -93,7 +94,7 @@ const login = async(req, res) => {
             }
             
             // si todo es correcto, generar token y devolverlo
-            let token = false
+            let token = jwt.createToken(user)
 
              // Devolver los datos del usuario (sin la contraseña)
             return res.status(200).send({
@@ -115,11 +116,6 @@ const login = async(req, res) => {
     
     }
   
-  
-
-    //eliminar password del objeto
-
-    //devolver datos del usuario
    
 }
 
