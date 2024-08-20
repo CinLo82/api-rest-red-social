@@ -65,29 +65,48 @@ const login = async(req, res) => {
     // recoger parametros de body
     let params = req.body;
 
-    if(!params.email || params.password) {
+    // Validar que los parámetros email y password están presentes
+    if(!params.email || !params.password) {
         return res.status(400).send({
             status: 'error',
             message: 'Faltan datos por enviar'
         })
+        
     }
     // buscar en la base de datos si existen
     try{
-        let user = await User.findOne({ email: params.email.toLowerCase() })
-        .select({'password': 0})
-        .exec();
+        let user = await User.findOne({ email: params.email.toLowerCase() }).exec()
             if (!user) {
                 return res.status(404).send({
                     status: 'error',
                     message: 'El usuario no existe'
                 });
             }
+              //comprobar la contraseña
+            const pwd = bcrypt.compareSync(params.password, user.password)
+
+            if (!pwd) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'La contraseña es incorrecta'
+                });
+            }
+            
+            // si todo es correcto, generar token y devolverlo
+            let token = false
+
+             // Devolver los datos del usuario (sin la contraseña)
             return res.status(200).send({
                 status: 'success',
-                message: 'Acción de Login',
-                user
+                message: 'Te has identificado correctamente',
+                user:{
+                    id: user._id,
+                    name: user.name,
+                    surname: user.nick,
+                },
+                token
             })
-
+          
     } catch (error) {
         return res.status(500).json({
             status: 'error',
@@ -95,12 +114,10 @@ const login = async(req, res) => {
         });
     
     }
+  
+  
 
-    
-
-    //comprobar la contraseña
-
-    //devolver token
+    //eliminar password del objeto
 
     //devolver datos del usuario
    
