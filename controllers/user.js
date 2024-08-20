@@ -61,7 +61,53 @@ const register = async (req, res) => {
     }
 }
 
+const login = async(req, res) => {
+    // recoger parametros de body
+    let params = req.body;
+
+    if(!params.email || params.password) {
+        return res.status(400).send({
+            status: 'error',
+            message: 'Faltan datos por enviar'
+        })
+    }
+    // buscar en la base de datos si existen
+    try{
+        let user = await User.findOne({ email: params.email.toLowerCase() })
+        .select({'password': 0})
+        .exec();
+            if (!user) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'El usuario no existe'
+                });
+            }
+            return res.status(200).send({
+                status: 'success',
+                message: 'Acción de Login',
+                user
+            })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        });
+    
+    }
+
+    
+
+    //comprobar la contraseña
+
+    //devolver token
+
+    //devolver datos del usuario
+   
+}
+
 module.exports = {
     pruebaUser,
-    register
+    register,
+    login
 }
