@@ -4,7 +4,7 @@ const moment = require('moment');
 //clave secreta
 const secret = 'CLAVE_SECRETA_del-Proyecto_DE_LA_red_social_321'
 // Generar token
-exports.createToken = (user) => {
+const createToken = (user) => {
     const payload = {
         id: user._id,
         name: user.name,
@@ -16,7 +16,10 @@ exports.createToken = (user) => {
         exp: moment().add(30, 'days').unix()
     }
     return jwt.encode(payload, secret)
+
 }
 
-
-// devolver jwt toke codificado
+module.exports = {
+    createToken,
+    secret
+}

@@ -28,7 +28,6 @@ app.use('/api/user', UserRoutes)
 app.use('/api/follow', FollowRoutes)
 app.use('/api/publication', PublicationRoutes)
 
-
 //ruta de prueba
 app.get("ruta-prueba", (req, res) => {
     return res.status(200).json(
@@ -38,10 +37,9 @@ app.get("ruta-prueba", (req, res) => {
             'descripcion':'Esta es una ruta de prueba'
         }
     )
-}
-)
+})
 
-// poner servidor a escuchar oeticiones http
+// poner servidor a escuchar peticiones http
 app.listen(puerto, () => {
     console.log(`Servidor corriendo en http://localhost:${puerto}`)
 })
