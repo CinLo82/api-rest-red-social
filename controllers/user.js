@@ -116,14 +116,41 @@ const login = async(req, res) => {
             status: 'error',
             message: 'Error en la petición de usuarios'
         });
-    
     }
-  
-   
+}
+
+const profile = async(req, res) => {
+    // recoger parametros de id
+    const id = req.params.id;
+
+    //consulta para sacar los datos del usuario
+    try {
+        let userProfile = await User.findById(id)
+        .select({ password:0, role:0 })
+        .exec()
+        if (!userProfile) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'El usuario no existe'
+            });
+        }
+        // Devolver los datos del usuario (sin la contraseña)
+        return res.status(200).send({
+            status: 'success',
+            userProfile
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        });
+    }
+
 }
 
 module.exports = {
     pruebaUser,
     register,
-    login
+    login,
+    profile
 }

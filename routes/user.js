@@ -7,6 +7,7 @@ const check = require('../middlewares/auth')
 router.get('/prueba-user', check.auth, UserControler.pruebaUser)
 router.post('/register', UserControler.register)
 router.post('/login', UserControler.login)
+router.get('/profile/:id', check.auth, UserControler.profile)
 
 //exportar router
 module.exports = router
