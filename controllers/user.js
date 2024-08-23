@@ -1,7 +1,6 @@
 const  User = require('../models/user')
 const  bcrypt = require('bcrypt')
 const jwt = require('../services/jwt')
-const mongoosePagination = require('mongoose-pagination')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -188,10 +187,82 @@ const list = async(req, res) => {
     }
 }
 
+const update = async(req, res) => {
+    //recoger informacion del usuario a actualizar
+    let userToUpdate = req.body;
+    const userIdentity = req.user
+
+    //eliminar campos sobrantes
+    delete userToUpdate.iat
+    delete userToUpdate.exp
+    delete userToUpdate.role
+    delete userToUpdate.image
+
+    //comprobar que el usuario esta identificado
+
+    try{ 
+        // control de usuarios duplicados
+        let users = await User.find({
+            $or: [
+                { email: userToUpdate.email.toLowerCase() },
+                { nick: userToUpdate.nick.toLowerCase() }
+            ]
+        }).exec()
+
+        let userIsset = false
+            users.forEach((user) => {
+                if(user && user._id != userIdentity.id) userIsset = true
+                }
+            ) 
+        if (userIsset) {
+            return res.status(200).send({
+                status: 'success',
+                message: 'El usuario ya esta registrado'
+            });
+        }
+      
+        // cifrar la contraseña
+        if(userToUpdate.password){
+            let pwd = await bcrypt.hash(userToUpdate.password, 10);
+            userToUpdate.password = pwd;
+        }
+
+         // buscar y actulizar
+         let userUpdated = await User
+         .findOneAndUpdate({ _id: userIdentity.id }, userToUpdate, { new: true })
+         .exec();
+            if(!userUpdated){
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'No se ha podido actualizar el usuario'
+                });
+            }
+
+        // devolver la respuesta
+
+        return res.status(200).json({
+            status: 'success',
+            message: 'Usuario actualizado',
+            userToUpdate,
+            userUpdated
+        });
+
+    
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        });
+    }
+  
+
+}
+
 module.exports = {
     pruebaUser,
     register,
     login,
     profile,
-    list
+    list, 
+    update
 }
