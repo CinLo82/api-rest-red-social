@@ -2,6 +2,7 @@ const  User = require('../models/user')
 const  bcrypt = require('bcrypt')
 const jwt = require('../services/jwt')
 const fs = require('fs')
+const path = require('path')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -313,6 +314,41 @@ const upload = async(req, res) => {
     }
 }
 
+const avatar = async(req, res) => {
+    try{
+        // comprobar que me llega el avatar
+        if (!req.params.file) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'La imagen no existe'
+            })
+        }
+        //sacar el param de la url
+        const file = req.params.file;
+
+        //sacar el path real
+        const filePath = './uploads/avatars/' + file;
+
+        //coprobar si existe
+        fs.stat(filePath, (error, exists) => {
+            if (!exists) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'La imagen no existe'
+                })
+            }
+        })
+        //devolver la imagen
+        return res.sendFile(path.resolve(filePath))
+        
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        })
+    }
+}
+
 module.exports = {
     pruebaUser,
     register,
@@ -320,5 +356,6 @@ module.exports = {
     profile,
     list, 
     update,
-    upload
+    upload,
+    avatar
 }
