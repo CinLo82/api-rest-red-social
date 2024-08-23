@@ -1,6 +1,7 @@
 const  User = require('../models/user')
 const  bcrypt = require('bcrypt')
 const jwt = require('../services/jwt')
+const fs = require('fs')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -254,8 +255,62 @@ const update = async(req, res) => {
             message: 'Error en la petición de usuarios'
         });
     }
-  
+}
 
+const upload = async(req, res) => {
+    // recoger el fichero de la imagen, y comprobar que existe
+    if (!req.file) {
+        return res.status(404).send({
+            status: 'error',
+            message: 'La peticion no incluye la imagen'
+        });
+    }
+
+    // conseguir el nombre del archivo
+    let image = req.file.originalname;
+
+    // sacar la extension
+    const imageSplit = image.split('.')
+    const extension = imageSplit[imageSplit.length - 1]
+
+    // comprobar la extension, solo imagenes, si no es valida borrar
+    if (extension !== 'png' && extension !== 'jpg' && extension !== 'jpeg' && extension !== 'gif') {
+        // borrar el archivo
+        const filePath = req.file.path
+        const fileDelete = fs.unlinkSync(filePath) 
+            return res.status(400).send({
+                status: 'error',
+                message: 'La extension del archivo no es valida'
+            })
+    }
+
+    //si es correcta guardar en bd
+    try{
+        const userUpdated = await User.findOneAndUpdate(
+            { _id: req.user.id },
+            { image: req.file.filename },
+            { new: true }
+        );
+    
+        if (!userUpdated) {
+            return res.status(500).send({
+                status: 'error',
+                message: 'Error al guardar la imagen del usuario'
+            });
+        }
+    
+        // devolver respuesta
+        return res.status(200).send({
+            status: 'success',
+            userUpdated,
+            file: req.file
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        });
+    }
 }
 
 module.exports = {
@@ -264,5 +319,6 @@ module.exports = {
     login,
     profile,
     list, 
-    update
+    update,
+    upload
 }
