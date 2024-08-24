@@ -42,10 +42,33 @@ const saveFollow = async (req, res) => {
                 err
             })
         })
-   
-
 }
 
+const unFollow = async (req, res) => {
+    // Obtener el id del usuario logueado
+    const userId = req.user.id
+
+    //recoger el id del usuario que sigo y quiero dejar de seguir
+    const followedId = req.params.id
+
+    //find de las coincidencias y hacer un delete
+    try {
+        await Follow.deleteOne({ user: userId, followed: followedId });
+        return res.status(200).send({
+            status: 'success',
+            message: 'Follow eliminado correctamente',
+            userId,
+            followedId
+        });
+    } catch (err) {
+        return res.status(500).send({
+            status: 'error',
+            message: 'Error al borrar el follow',
+            err
+        });
+    }
+    
+}
 // Accion de eliminar un follow (accion dejar de seguir)
 
 // Accion de listar los usuarios que estoy siguiendo
@@ -54,5 +77,6 @@ const saveFollow = async (req, res) => {
 
 module.exports = {
     pruebaFollow,
-    saveFollow
+    saveFollow,
+    unFollow
 }
