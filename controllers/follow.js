@@ -1,6 +1,8 @@
 const Follow = require('../models/follow')
-const user = require('../models/user')
 const User = require('../models/user')
+
+//importar service
+const followService = require('../services/followService')
 
 const pruebaFollow = (req, res) => {
     return res.status(200).send(
@@ -69,14 +71,76 @@ const unFollow = async (req, res) => {
     }
     
 }
-// Accion de eliminar un follow (accion dejar de seguir)
 
 // Accion de listar los usuarios que estoy siguiendo
 
+const following = async (req, res) => {
+    try {
+        // Obtener el id del usuario logueado
+        let userId = req.user.id;
+        // comprobar si existe el parametro opcional de la url
+        if (req.params.id) userId = req.params.id;
+
+        // si me llega la pagina 
+        let page = 1;
+        if (req.params.page) page = req.params.page;
+
+        // indicar los usuarios que quiero por pagina
+        let itemsPerPage = 4;
+
+        // find a follow, popular datos de los usuarios
+        const follows = await Follow.find({ user: userId })
+            .populate('followed')
+            .select({ '_id': 0, '__v': 0, 'user': 0, })
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage)
+            .exec();
+
+        const total = await Follow.countDocuments({ user: userId });
+
+        if (!follows) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'No sigues a ningun usuario'
+            });
+        }
+        // sacar un array de los ids de los usuarios que me siguen y que sigo
+        let followUserIds = await followService.followUserIds(req.user.id)
+
+        return res.status(200).send({
+            status: 'success',
+            total,
+            pages: Math.ceil(total / itemsPerPage),
+            follows,
+            message: 'Lista de usuarios que estoy siguiendo',
+            user_following: followUserIds.following,
+            user_follow_me: followUserIds.followed
+        })
+
+    } catch (error) {
+        return res.status(500).send({
+            status: 'error',
+            message: 'Error en la peticion',
+            error
+        });
+    }
+};
+
 // Accion de listar los usuarios que me siguen
+const followers = async (req, res) => {
+
+    return res.status(200).send({
+        status: 'success',
+        message: 'Lista de usuarios que me siguen',
+
+    })
+  
+}
 
 module.exports = {
     pruebaFollow,
     saveFollow,
-    unFollow
+    unFollow,
+    following,
+    followers
 }
