@@ -128,13 +128,48 @@ const following = async (req, res) => {
 
 // Accion de listar los usuarios que me siguen
 const followers = async (req, res) => {
+    try {
+        // Obtener el id del usuario logueado
+        let userId = req.user.id;
+        // comprobar si existe el parametro opcional de la url
+        if (req.params.id) userId = req.params.id;
 
-    return res.status(200).send({
-        status: 'success',
-        message: 'Lista de usuarios que me siguen',
+        // si me llega la pagina 
+        let page = 1;
+        if (req.params.page) page = req.params.page;
 
-    })
-  
+        // indicar los usuarios que quiero por pagina
+        let itemsPerPage = 4;
+
+        // find a follow, popular datos de los usuarios
+        const follows = await Follow.find({ followed: userId })
+            .populate('user followed')
+            .select({ '_id': 0, '__v': 0, 'user': 0, })
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage)
+            .exec()
+
+        const total = await Follow.countDocuments({ user: userId });
+
+        let followUserIds = await followService.followUserIds(req.user.id)
+
+        return res.status(200).send({
+            status: 'success',
+            total,
+            pages: Math.ceil(total / itemsPerPage),
+            follows,
+            message: 'Lista de usuarios que me siguen',
+            user_following: followUserIds.following,
+            user_follow_me: followUserIds.follower
+        })
+
+    } catch (error) {
+        return res.status(500).send({
+            status: 'error',
+            message: 'Error en la peticion',
+            error
+        });
+    }
 }
 
 module.exports = {
