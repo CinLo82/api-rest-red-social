@@ -1,5 +1,6 @@
 const Publication = require('../models/publication');
 
+
 const pruebaPublication = (req, res) => {
     return res.status(200).send(
         {
@@ -138,7 +139,6 @@ const deletePublication = async (req, res) => {
                 totalPages,
                 publications,
             });
-
         } catch (error) {
             return res.status(500).send({
                 message: 'Error al buscar las publicaciones',
@@ -149,6 +149,75 @@ const deletePublication = async (req, res) => {
 
 //subir archivos de imagen/avatar de usuario
 
+const uploadImage = async(req, res) => {
+    // recoger el id del usuario
+    const publicationId = req.params.id;
+    // recoger el fichero de la imagen, y comprobar que existe
+    if (!req.file) {
+        return res.status(404).send({
+            status: 'error',
+            message: 'La peticion no incluye la imagen'
+        });
+    }
+
+    // conseguir el nombre del archivo
+    let image = req.file.originalname;
+
+    // sacar la extension
+    const imageSplit = image.split('.')
+    const extension = imageSplit[imageSplit.length - 1].toLowerCase()
+
+    // comprobar la extensión, solo imágenes, si no es válida borrar
+    const validExtensions = ['png', 'jpg', 'jpeg', 'gif'];
+    if (!validExtensions.includes(extension)) {
+        // borrar el archivo
+        const filePath = req.file.path;
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                return res.status(500).send({
+                    status: 'error',
+                    message: 'Error al borrar el archivo no válido'
+                });
+            }
+        });
+        return res.status(400).send({
+            status: 'error',
+            message: 'La extensión del archivo no es válida'
+        });
+    }
+
+    //si es correcta guardar en bd
+    try {
+        const publicationUpdate = await Publication.findOneAndUpdate(
+            { user: req.user.id, _id: publicationId },
+            { file: req.file.filename },
+            { new: true }
+        );
+
+        if (!publicationUpdate) {
+            return res.status(500).send({
+                status: 'error',
+                message: 'Error al guardar la imagen de la publicación'
+            });
+        }
+
+        // devolver respuesta
+        return res.status(200).send({
+            status: 'success',
+            publication: publicationUpdate,
+            file: req.file
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de actualización de la publicación',
+            error: error.message
+        });
+    }
+};
+
+
+
 //obtener archivo de imagen/avatar de usuario
 
 module.exports = {
@@ -156,5 +225,6 @@ module.exports = {
     savePublication,
     detailPublication,
     deletePublication,
-    userPublications
+    userPublications,
+    uploadImage
 }
