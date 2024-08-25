@@ -25,7 +25,8 @@ router.get('/profile/:id', check.auth, UserControler.profile)
 router.get('/list/:page?', check.auth, UserControler.list)
 router.put('/update', check.auth, UserControler.update)
 router.post('/upload', [check.auth, uploads.single('file0')], UserControler.upload)
-router.get('/avatar/:file',check.auth, UserControler.avatar)
+router.get('/avatar/:file', UserControler.avatar)
+router.get('/counters/:id', check.auth, UserControler.counters)
 
 
 //exportar router

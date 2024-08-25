@@ -4,6 +4,8 @@ const jwt = require('../services/jwt')
 const fs = require('fs')
 const path = require('path')
 const followService = require('../services/followService')
+const Follow = require('../models/follow')
+const Publication = require('../models/publication')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -242,6 +244,8 @@ const update = async(req, res) => {
         if(userToUpdate.password){
             let pwd = await bcrypt.hash(userToUpdate.password, 10);
             userToUpdate.password = pwd;
+        }else{
+            delete userToUpdate.password
         }
 
          // buscar y actulizar
@@ -364,6 +368,38 @@ const avatar = async(req, res) => {
     }
 }
 
+const counters = async(req, res) => {
+    //recoger el id de la url
+    const userId = req.user.id
+
+    if (req.params.id) {
+        userId = req.params.id
+    }
+    try{
+        //crear objeto de respuesta
+        const following = await Follow.count({ 'user': userId })
+
+        const followed = await Follow.count({ 'followed': userId })
+
+        const publications = await Publication.count({ 'user': userId })
+
+        return res.status(200).send({
+            status: 'success',
+            userId,
+            following: following,
+            followed: followed,
+            publications: publications
+        })
+
+    }
+    catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en los contadores'
+        })
+    }
+}
+
 module.exports = {
     pruebaUser,
     register,
@@ -372,5 +408,6 @@ module.exports = {
     list, 
     update,
     upload,
-    avatar
+    avatar,
+    counters
 }
