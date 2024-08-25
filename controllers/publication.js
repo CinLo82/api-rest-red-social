@@ -39,6 +39,31 @@ const savePublication = async (req, res) => {
     }
 }
 
+const detailPublication = async (req, res) => {
+    //recoger el id de la publicacion
+    const publicationId = req.params.id
+    try {
+        //buscar la publicacion en la base de datos
+        const publication = await Publication.findById(publicationId)
+        .populate('user')
+        .exec()
+        if (!publication) 
+            return res.status(404).send({
+                message: 'No existe la publicación'
+            })
+            
+        return res.status(200).send({
+            publication
+        })
+
+    }
+    catch (error) {
+        return res.status(500).send({
+            message: 'Error al buscar la publicación'
+        })
+    }
+}
+
 //listar todas las publicaciones
 
 //listar public
@@ -51,5 +76,6 @@ const savePublication = async (req, res) => {
 
 module.exports = {
     pruebaPublication,
-    savePublication
+    savePublication,
+    detailPublication
 }
