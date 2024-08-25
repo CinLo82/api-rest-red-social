@@ -170,6 +170,7 @@ const list = async(req, res) => {
         let itemsPerPage = 3;
         let total = await User.countDocuments();
         let users = await User.find()
+            .select('-password -email -role -__v')
             .sort('_id')
             .skip((page - 1) * itemsPerPage)
             .limit(itemsPerPage)

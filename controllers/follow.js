@@ -91,7 +91,7 @@ const following = async (req, res) => {
         // find a follow, popular datos de los usuarios
         const follows = await Follow.find({ user: userId })
             .populate('followed')
-            .select({ '_id': 0, '__v': 0, 'user': 0, })
+            .select({ '_id': 0, '__v': 0, 'user': 0, 'email':0 })
             .skip((page - 1) * itemsPerPage)
             .limit(itemsPerPage)
             .exec();
@@ -144,7 +144,7 @@ const followers = async (req, res) => {
         // find a follow, popular datos de los usuarios
         const follows = await Follow.find({ followed: userId })
             .populate('user followed')
-            .select({ '_id': 0, '__v': 0, 'user': 0, })
+            .select({ '_id': 0, '__v': 0, 'user': 0, 'email':0 })
             .skip((page - 1) * itemsPerPage)
             .limit(itemsPerPage)
             .exec()

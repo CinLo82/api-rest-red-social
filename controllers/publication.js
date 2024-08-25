@@ -1,6 +1,7 @@
 const Publication = require('../models/publication');
 const fs = require('fs');
 const path = require('path');
+const followService = require('../services/followService');
 
 const pruebaPublication = (req, res) => {
     return res.status(200).send(
@@ -120,7 +121,7 @@ const deletePublication = async (req, res) => {
             //find, populate, ordenar, agregar paginacion
             const publications = await Publication.find({ user: userId })
                 .sort('-created_at')
-                .populate('user', '-password -__v -role') 
+                .populate('user', '-password -__v -role -email') 
                 .skip((page - 1) * itemsPerPage)
                 .limit(itemsPerPage)
                 .exec();
@@ -253,6 +254,59 @@ const mediaPublication = async(req, res) => {
     }
 }
 
+//loistar todas las publicaciones (FEED)
+const feedPublications = async(req, res) => {
+    try {
+        //controlar la pagina
+        let page = 1;
+        if (req.params.page) {
+            page = req.params.page;
+        }
+
+        const itemsPerPage = 4;
+
+        // contar el número total de publicaciones
+        const totalPublications = await Publication.countDocuments();
+
+        // calcular el número total de páginas
+        const totalPages = Math.ceil(totalPublications / itemsPerPage);
+
+        const myFollows = await followService.followUserIds(req.user.id);
+
+        //find, populate, ordenar, agregar paginacion
+        const publications = await Publication.find({
+            user: { $in: myFollows.following }
+        })
+            .sort('-created_at')
+            .populate('user', '-password -__v -role -email') 
+            .skip((page - 1) * itemsPerPage)
+            .limit(itemsPerPage)
+            .exec();
+
+        if(!publications || publications.length === 0) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'No hay publicaciones para mostrar'
+            });
+        }
+
+        return res.status(200).send({
+            status: 'success',
+            page,
+            totalPages,
+            totalPublications,
+            itemsPerPage,
+            following: myFollows.following,
+            publications,
+        });
+    } catch (error) {
+        return res.status(500).send({
+            message: 'Error al buscar las publicaciones',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     pruebaPublication,
     savePublication,
@@ -260,5 +314,6 @@ module.exports = {
     deletePublication,
     userPublications,
     uploadImage,
-    mediaPublication
+    mediaPublication,
+    feedPublications
 }
