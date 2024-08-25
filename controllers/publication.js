@@ -1,5 +1,6 @@
 const Publication = require('../models/publication');
-
+const fs = require('fs');
+const path = require('path');
 
 const pruebaPublication = (req, res) => {
     return res.status(200).send(
@@ -216,9 +217,41 @@ const uploadImage = async(req, res) => {
     }
 };
 
+//obtener archivo de imagen
+const mediaPublication = async(req, res) => {
+    try{
+        // comprobar que me llega el avatar
+        if (!req.params.file) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'La imagen no existe'
+            })
+        }
+        //sacar el param de la url
+        const file = req.params.file;
 
+        //sacar el path real
+        const filePath = './uploads/publications/' + file;
 
-//obtener archivo de imagen/avatar de usuario
+        //coprobar si existe
+        fs.stat(filePath, (error, exists) => {
+            if (!exists) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'La imagen no existe'
+                })
+            }
+        })
+        //devolver la imagen
+        return res.sendFile(path.resolve(filePath))
+        
+    } catch (error) {
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error en la petición de usuarios'
+        })
+    }
+}
 
 module.exports = {
     pruebaPublication,
@@ -226,5 +259,6 @@ module.exports = {
     detailPublication,
     deletePublication,
     userPublications,
-    uploadImage
+    uploadImage,
+    mediaPublication
 }

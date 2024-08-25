@@ -24,6 +24,7 @@ router.get('/detail/:id', check.auth, PublicationControler.detailPublication)
 router.delete('/delete/:id', check.auth, PublicationControler.deletePublication)
 router.get('/user/:id/:page?', check.auth, PublicationControler.userPublications)
 router.post('/upload/:id', [check.auth, uploads.single('file0')], PublicationControler.uploadImage)
+router.get('/media/:file', check.auth, PublicationControler.mediaPublication)
 
 //exportar router
 module.exports = router
