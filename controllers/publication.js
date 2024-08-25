@@ -64,11 +64,37 @@ const detailPublication = async (req, res) => {
     }
 }
 
-//listar todas las publicaciones
-
-//listar public
-
 //borrar publicacion
+const deletePublication = async (req, res) => {
+    try {
+        // recoger el id de la publicacion
+        const publicationId = req.params.id;
+
+        // buscar y borrar la publicacion en la base de datos
+        const publicationRemoved = await Publication.findOneAndDelete({ user: req.user.id, '_id': publicationId });
+
+        // comprobar si se ha borrado la publicacion
+        if (!publicationRemoved) {
+            return res.status(404).send({
+                status: 'error',
+                message: 'No existe la publicación'
+            });
+        }
+
+        return res.status(200).send({
+            status: 'success',
+            message: 'La publicación ha sido removida',
+            publication: publicationRemoved
+        });
+
+    } catch (error) {
+        return res.status(500).send({
+            message: 'Error al borrar la publicación',
+            error: error.message 
+        });
+    }
+}
+
 
 //subir archivos de imagen/avatar de usuario
 
@@ -77,5 +103,6 @@ const detailPublication = async (req, res) => {
 module.exports = {
     pruebaPublication,
     savePublication,
-    detailPublication
+    detailPublication,
+    deletePublication
 }
