@@ -3,6 +3,7 @@ const  bcrypt = require('bcrypt')
 const jwt = require('../services/jwt')
 const fs = require('fs')
 const path = require('path')
+const followService = require('../services/followService')
 
 // acciones de prueba
 const pruebaUser = (req, res) => {
@@ -136,10 +137,17 @@ const profile = async(req, res) => {
                 message: 'El usuario no existe'
             });
         }
+
+        // Info de seguimientos
+        let followInfo = await followService.followThisUser(req.user.id, id)
+
         // Devolver los datos del usuario (sin la contraseña)
+
         return res.status(200).send({
             status: 'success',
-            userProfile
+            userProfile,
+            following: followInfo.following,
+            follower: followInfo.follower
         })
     } catch (error) {
         return res.status(500).json({
@@ -173,13 +181,19 @@ const list = async(req, res) => {
                 message: 'No hay usuarios disponibles'
             });
         }
+
+        // sacar un array de los ids de los usuarios que me siguen y que sigo
+        let followUserIds = await followService.followUserIds(req.user.id)
+
         return res.status(200).send({
             status: 'success',
             users,
             total,
             pages: Math.ceil(total / itemsPerPage),
             page,
-            itemsPerPage
+            itemsPerPage,
+            user_following: followUserIds.following,
+            user_follow_me: followUserIds.follower
         })
     } catch (error) {
         return res.status(500).json({

@@ -114,7 +114,7 @@ const following = async (req, res) => {
             follows,
             message: 'Lista de usuarios que estoy siguiendo',
             user_following: followUserIds.following,
-            user_follow_me: followUserIds.followed
+            user_follow_me: followUserIds.follower
         })
 
     } catch (error) {
