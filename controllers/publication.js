@@ -95,6 +95,57 @@ const deletePublication = async (req, res) => {
     }
 }
 
+// listar las publicaciones de un usuario
+    const userPublications = async (req, res) => {
+        try {
+            // recoger el id del usuario
+            const userId = req.params.id;
+
+            //controlar la pagina
+            let page = 1;
+            if (req.params.page) {
+                page = req.params.page;
+            }
+
+            const itemsPerPage = 4;
+
+             // contar el número total de publicaciones del usuario
+            const totalPublications = await Publication.countDocuments({ user: userId });
+
+            // calcular el número total de páginas
+            const totalPages = Math.ceil(totalPublications / itemsPerPage);
+
+            //find, populate, ordenar, agregar paginacion
+            const publications = await Publication.find({ user: userId })
+                .sort('-created_at')
+                .populate('user', '-password -__v -role') 
+                .skip((page - 1) * itemsPerPage)
+                .limit(itemsPerPage)
+                .exec();
+
+            if(!publications || publications.length === 0) {
+                return res.status(404).send({
+                    status: 'error',
+                    message: 'No hay publicaciones para mostrar'
+                });
+            }
+    
+            return res.status(200).send({
+                status: 'success',
+                page,
+                itemsPerPage,
+                totalPublications,
+                totalPages,
+                publications,
+            });
+
+        } catch (error) {
+            return res.status(500).send({
+                message: 'Error al buscar las publicaciones',
+                error: error.message
+            });
+        }
+    }  
 
 //subir archivos de imagen/avatar de usuario
 
@@ -104,5 +155,6 @@ module.exports = {
     pruebaPublication,
     savePublication,
     detailPublication,
-    deletePublication
+    deletePublication,
+    userPublications
 }
