@@ -370,18 +370,16 @@ const avatar = async(req, res) => {
 
 const counters = async(req, res) => {
     //recoger el id de la url
-    const userId = req.user.id
+    let userId = req.user.id
 
     if (req.params.id) {
         userId = req.params.id
     }
     try{
         //crear objeto de respuesta
-        const following = await Follow.count({ 'user': userId })
-
-        const followed = await Follow.count({ 'followed': userId })
-
-        const publications = await Publication.count({ 'user': userId })
+        const following = await Follow.countDocuments({ 'user': userId });
+        const followed = await Follow.countDocuments({ 'followed': userId });
+        const publications = await Publication.countDocuments({ 'user': userId });
 
         return res.status(200).send({
             status: 'success',
@@ -395,7 +393,8 @@ const counters = async(req, res) => {
     catch (error) {
         return res.status(500).json({
             status: 'error',
-            message: 'Error en los contadores'
+            message: 'Error en los contadores',
+            error: error.message || error
         })
     }
 }

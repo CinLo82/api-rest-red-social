@@ -139,7 +139,7 @@ const followers = async (req, res) => {
         if (req.params.page) page = req.params.page;
 
         // indicar los usuarios que quiero por pagina
-        let itemsPerPage = 4;
+        let itemsPerPage = 4 ;
 
         // find a follow, popular datos de los usuarios
         const follows = await Follow.find({ followed: userId })
